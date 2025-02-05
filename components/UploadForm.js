@@ -1,4 +1,3 @@
-// components/UploadForm.js
 const UploadForm = () => {
     const handleUpload = async (event) => {
       event.preventDefault();
@@ -11,8 +10,30 @@ const UploadForm = () => {
         return;
       }
   
-      console.log("Uploading:", { artist, title, file });
-      // Later: send these to your backend for processing.
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: reader.result,
+              artist,
+              title,
+            }),
+          });
+  
+          const result = await response.json();
+          if (result.success) {
+            alert("Upload successful!");
+          } else {
+            alert("Upload failed.");
+          }
+        } catch (error) {
+          console.error("Error uploading file:", error);
+        }
+      };
+      reader.readAsDataURL(file); // Convert file to Base64
     };
   
     return (
