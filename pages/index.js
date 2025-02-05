@@ -13,7 +13,7 @@ import { getNamedMiddlewareRegex } from "next/dist/shared/lib/router/utils/route
 export default function Home() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const allowedUsers = ["addison.lilholt@gmail.com", "charlestribe@gmail.com", "c.ed.aquino@gmail.com"];
+  const allowedUsers = ["addison.lilholt@gmail.com", "charlesrtribe@gmail.com", "c.ed.aquino@gmail.com"];
 
   return (
     <>
