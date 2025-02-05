@@ -1,39 +1,51 @@
-// context/PlayerContext.js
-
-import { createContext, useState, useRef } from "react";
-import { mimosPlaylist, cabinElectricPlaylist } from "../data/playlists";
+import { createContext, useState, useRef, useEffect } from "react";
 
 export const PlayerContext = createContext();
 
 export const PlayerProvider = ({ children }) => {
-  // State for the current playlist and track
   const [playlistName, setPlaylistName] = useState("mimos");
-  const [currentPlaylist, setCurrentPlaylist] = useState(mimosPlaylist);
+  const [currentPlaylist, setCurrentPlaylist] = useState([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
-
-  // Reference for the audio element
   const audioRef = useRef(null);
 
-  // Toggle between the two playlists and reset to the first track
-  const togglePlaylist = () => {
-    if (playlistName === "mimos") {
-      setPlaylistName("cabinElectric");
-      setCurrentPlaylist(cabinElectricPlaylist);
-    } else {
-      setPlaylistName("mimos");
-      setCurrentPlaylist(mimosPlaylist);
+  // Fetch playlists from the API
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      try {
+        const res = await fetch("/api/getPlaylists");
+        const data = await res.json();
+        setCurrentPlaylist(data.mimosPlaylist); // Default playlist
+      } catch (error) {
+        console.error("Error fetching playlists:", error);
+      }
+    };
+    fetchPlaylists();
+  }, []);
+
+  const togglePlaylist = async () => {
+    try {
+      const res = await fetch("/api/getPlaylists");
+      const data = await res.json();
+
+      if (playlistName === "mimos") {
+        setPlaylistName("cabinElectric");
+        setCurrentPlaylist(data.cabinElectricPlaylist);
+      } else {
+        setPlaylistName("mimos");
+        setCurrentPlaylist(data.mimosPlaylist);
+      }
+      setCurrentTrackIndex(0);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setIsPlaying(false);
+    } catch (error) {
+      console.error("Error toggling playlist:", error);
     }
-    setCurrentTrackIndex(0);
-    // Pause the audio when switching
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    setIsPlaying(false);
   };
 
-  // Play the current track
   const playTrack = () => {
     if (audioRef.current) {
       audioRef.current.play();
@@ -41,7 +53,6 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
-  // Pause the current track
   const pauseTrack = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -49,12 +60,12 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
-  // Advance to the next track (if available)
   const nextTrack = () => {
-    if (currentTrackIndex < currentPlaylist.length - 1) {
-      setCurrentTrackIndex(currentTrackIndex + 1);
-    }
+    setCurrentTrackIndex((prevIndex) =>
+      prevIndex + 1 < currentPlaylist.length ? prevIndex + 1 : 0
+    );
   };
+  
 
   return (
     <PlayerContext.Provider
